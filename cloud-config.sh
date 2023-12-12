@@ -1,0 +1,3 @@
+#cloud-config
+runcmd:
+  - 'python3 /etc/cloud_config.py "generatePassword=\"True\"" "allowUploadDownload=\"true\"" "templateName=\"single\"" "templateVersion=\"20230117\"" "mgmtNIC=\"\"" "hasInternet=\"false\"" "config_url=\"https://runtimeconfig.googleapis.com/v1beta1/projects/otl-ems-netops/configs/checkpoint-management-only-config\"" "config_path=\"projects/otl-ems-netops/configs/checkpoint-management-only-config\"" "installationType=\"Management only\"" "enableMonitoring=\"True\"" "shell=\"/etc/cli.sh\"" "computed_sic_key=\"N/A\"" "sicKey=\"\"" "managementGUIClientNetwork=\"0.0.0.0/0\"" "primary_cluster_address_name=\"\"" "secondary_cluster_address_name=\"\"" "managementNetwork=\"\"" "numAdditionalNICs=\"0\""'
