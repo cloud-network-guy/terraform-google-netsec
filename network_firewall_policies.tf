@@ -74,6 +74,7 @@ resource "google_compute_network_firewall_policy_rule" "default" {
   target_service_accounts = each.value.target_service_accounts
   match {
     src_ip_ranges            = each.value.src_ip_ranges
+    src_address_groups       = each.value.src_address_groups
     src_fqdns                = each.value.src_fqdns
     src_region_codes         = each.value.src_region_codes
     src_threat_intelligences = each.value.src_threat_intelligences
@@ -91,6 +92,7 @@ resource "google_compute_network_firewall_policy_rule" "default" {
     src_address_groups = []
     */
   }
+  depends_on = [google_network_security_address_group.default]
 }
 
 # Regional Network Firewall Policy Rules
@@ -121,7 +123,8 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
     src_address_groups = []
     */
   }
-  region = each.value.region
+  region     = each.value.region
+  depends_on = [google_network_security_address_group.default]
 }
 
 # Associations

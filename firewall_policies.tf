@@ -20,19 +20,23 @@ locals {
           direction                = upper(coalesce(rule.direction, "ingress"))
           target_service_accounts  = coalesce(rule.target_service_accounts, [])
           src_ip_ranges            = rule.source_ranges
+          src_address_groups       = coalesce(rule.source_address_groups, rule.address_groups, [])
           src_fqdns                = [] # TODO
           src_region_codes         = [] # TODO
           src_threat_intelligences = [] # TODO
           range_types              = toset(coalesce(rule.range_types, rule.range_type != null ? [rule.range_type] : []))
-          protocols                = coalesce(v.protocols, v.protocol != null ? [v.protocol] : ["all"])
+          protocols                = coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"])
+          ports                    = coalesce(rule.ports, rule.port != null ? [rule.port] : [])
         })
       ]
     })
   ]
 }
+
+# Get a list of unique range types in all rules, and use data source to lookup current IP address blocks
 locals {
-  firewall_rules = flatten([for i, v in local._firewall_policies : v.rules])
-  range_types    = toset(flatten([for i, v in local.firewall_rules : v.range_types]))
+  firewall_rules = flatten([for i, v in local._firewall_policies : [for rule in v.rules : rule]])
+  range_types    = toset(flatten([for i, v in local.firewall_rules : [for rt in v.range_types : lower(rt)]]))
 }
 data "google_netblock_ip_ranges" "default" {
   for_each   = local.range_types
@@ -44,18 +48,24 @@ locals {
     merge(v, {
       rules = [for rule in v.rules :
         merge(rule, {
+          range_types = [for range_type in rule.range_types : lower(range_type)]
           layer4_configs = [for protocol in rule.protocols :
             {
-              protocol = lower(protocol)
-              ports    = coalesce(v.ports, "1-65535")
+              ip_protocol = lower(protocol)
+              ports       = try(coalescelist(rule.ports, contains(["tcp", "udp"], protocol) ? ["1-65535"] : []), null)
             }
           ]
           src_ip_ranges = rule.direction == "INGRESS" ? toset(coalesce(
             rule.source_ranges,
             rule.ranges,
-            flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[rt].cidr_blocks, null)]),
+            flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
           )) : null
+          src_address_groups = toset(flatten(
+            [for address_group in rule.src_address_groups :
+              try(google_network_security_address_group.default["${v.project_id}/${address_group}"].id, null)
+            ]
+          ))
         })
       ]
       type = v.type == "unknown" && length(v.networks) > 0 ? "network" : "unknown"
