@@ -17,7 +17,7 @@ locals {
           disabled                  = coalesce(rule.disabled, false)
           priority                  = coalesce(rule.priority, 1000)
           enable_logging            = coalesce(rule.logging, false)
-          direction                 = upper(coalesce(rule.direction, rule.dest_ranges != null || rule.dest.address_groups != null ? "egress" : "ingress"))
+          direction                 = upper(coalesce(rule.direction, rule.destination_ranges != null || rule.destination_address_groups != null ? "egress" : "ingress"))
           target_service_accounts   = coalesce(rule.target_service_accounts, [])
           src_ip_ranges             = rule.source_ranges
           src_address_groups        = coalesce(rule.source_address_groups, rule.address_groups, [])
@@ -25,7 +25,7 @@ locals {
           src_region_codes          = [] # TODO
           src_threat_intelligences  = [] # TODO
           dest_ip_ranges            = rule.dest_ranges
-          dest_address_groups       = coalesce(rule.dest_address_groups, rule.address_groups, [])
+          dest_address_groups       = coalesce(rule.destination_address_groups, rule.address_groups, [])
           dest_fqdns                = [] # TODO
           dest_region_codes         = [] # TODO
           dest_threat_intelligences = [] # TODO
