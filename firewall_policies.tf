@@ -73,16 +73,16 @@ locals {
             flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
           )) : null
-          src_address_groups = toset(flatten(
+          src_address_groups = rule.direction == "INGRESS" ? toset(flatten(
             [for address_group in rule.src_address_groups :
               try(google_network_security_address_group.default["${v.project_id}/${address_group}"].id, null)
             ]
-          ))
-          dest_address_groups = toset(flatten(
+          )) : null
+          dest_address_groups = rule.direction == "EGRESS" ? toset(flatten(
             [for address_group in rule.dest_address_groups :
               try(google_network_security_address_group.default["${v.project_id}/${address_group}"].id, null)
             ]
-          ))
+          )) : null
         })
       ]
       type = v.type == "unknown" && length(v.networks) > 0 ? "network" : "unknown"
