@@ -62,7 +62,7 @@ locals {
             }
           ]
           src_ip_ranges = rule.direction == "INGRESS" ? toset(coalesce(
-            rule.source_ip_ranges,
+            rule.src_ip_ranges,
             rule.ranges,
             flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
