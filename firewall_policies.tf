@@ -24,7 +24,7 @@ locals {
           src_fqdns                 = [] # TODO
           src_region_codes          = [] # TODO
           src_threat_intelligences  = [] # TODO
-          dest_ip_ranges            = rule.dest_ranges
+          dest_ip_ranges            = rule.destination_ranges
           dest_address_groups       = coalesce(rule.destination_address_groups, rule.address_groups, [])
           dest_fqdns                = [] # TODO
           dest_region_codes         = [] # TODO
@@ -62,13 +62,13 @@ locals {
             }
           ]
           src_ip_ranges = rule.direction == "INGRESS" ? toset(coalesce(
-            rule.source_ranges,
+            rule.source_ip_ranges,
             rule.ranges,
             flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
           )) : null
           dest_ip_ranges = rule.direction == "EGRESS" ? toset(coalesce(
-            rule.dest_ranges,
+            rule.dest_ip_ranges,
             rule.ranges,
             flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
