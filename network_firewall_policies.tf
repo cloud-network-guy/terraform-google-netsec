@@ -81,7 +81,7 @@ resource "google_compute_network_firewall_policy_rule" "default" {
     dest_ip_ranges           = each.value.dest_ip_ranges
     dest_address_groups      = each.value.dest_address_groups
     dest_fqdns               = each.value.dest_fqdns
-    dest_region_codes        = each.value.dst_region_codes
+    dest_region_codes        = each.value.dest_region_codes
     dynamic "layer4_configs" {
       for_each = each.value.layer4_configs
       content {
@@ -114,7 +114,7 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
     dest_ip_ranges           = each.value.dest_ip_ranges
     dest_address_groups      = each.value.dest_address_groups
     dest_fqdns               = each.value.dest_fqdns
-    dest_region_codes        = each.value.dst_region_codes
+    dest_region_codes        = each.value.dest_region_codes
     layer4_configs {
       ip_protocol = "all"
     }
