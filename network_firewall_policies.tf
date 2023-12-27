@@ -78,6 +78,10 @@ resource "google_compute_network_firewall_policy_rule" "default" {
     src_fqdns                = each.value.src_fqdns
     src_region_codes         = each.value.src_region_codes
     src_threat_intelligences = each.value.src_threat_intelligences
+    dest_ip_ranges           = each.value.dest_ip_ranges
+    dest_address_groups      = each.value.dest_address_groups
+    dest_fqdns               = each.value.dest_fqdns
+    dest_region_codes        = each.value.dst_region_codes
     dynamic "layer4_configs" {
       for_each = each.value.layer4_configs
       content {
@@ -85,12 +89,6 @@ resource "google_compute_network_firewall_policy_rule" "default" {
         ports       = layer4_configs.value.ports
       }
     }
-    /*
-    src_secure_tags {
-      name = "tagValues/${google_tags_tag_value.basic_value.name}"
-    }
-    src_address_groups = []
-    */
   }
   depends_on = [google_network_security_address_group.default]
 }
@@ -113,15 +111,13 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
     src_fqdns                = each.value.src_fqdns
     src_region_codes         = each.value.src_region_codes
     src_threat_intelligences = each.value.src_threat_intelligences
+    dest_ip_ranges           = each.value.dest_ip_ranges
+    dest_address_groups      = each.value.dest_address_groups
+    dest_fqdns               = each.value.dest_fqdns
+    dest_region_codes        = each.value.dst_region_codes
     layer4_configs {
       ip_protocol = "all"
     }
-    /*
-    src_secure_tags {
-      name = "tagValues/${google_tags_tag_value.basic_value.name}"
-    }
-    src_address_groups = []
-    */
   }
   region     = each.value.region
   depends_on = [google_network_security_address_group.default]

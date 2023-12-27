@@ -11,33 +11,39 @@ locals {
       rules = [
         for rule in coalesce(v.rules, []) :
         merge(rule, {
-          create                   = coalesce(rule.create, true)
-          project_id               = trimspace(lower(coalesce(v.project_id, var.project_id)))
-          action                   = lower(coalesce(rule.action, "allow"))
-          disabled                 = coalesce(rule.disabled, false)
-          priority                 = coalesce(rule.priority, 1000)
-          enable_logging           = coalesce(rule.logging, false)
-          direction                = upper(coalesce(rule.direction, "ingress"))
-          target_service_accounts  = coalesce(rule.target_service_accounts, [])
-          src_ip_ranges            = rule.source_ranges
-          src_address_groups       = coalesce(rule.source_address_groups, rule.address_groups, [])
-          src_fqdns                = [] # TODO
-          src_region_codes         = [] # TODO
-          src_threat_intelligences = [] # TODO
-          range_types              = toset(coalesce(rule.range_types, rule.range_type != null ? [rule.range_type] : []))
-          protocols                = coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"])
-          ports                    = coalesce(rule.ports, rule.port != null ? [rule.port] : [])
+          create                    = coalesce(rule.create, true)
+          project_id                = trimspace(lower(coalesce(v.project_id, var.project_id)))
+          action                    = lower(coalesce(rule.action, "allow"))
+          disabled                  = coalesce(rule.disabled, false)
+          priority                  = coalesce(rule.priority, 1000)
+          enable_logging            = coalesce(rule.logging, false)
+          direction                 = upper(coalesce(rule.direction, rule.dest_ranges != null || rule.dest.address_groups != null ? "egress" : "ingress"))
+          target_service_accounts   = coalesce(rule.target_service_accounts, [])
+          src_ip_ranges             = rule.source_ranges
+          src_address_groups        = coalesce(rule.source_address_groups, rule.address_groups, [])
+          src_fqdns                 = [] # TODO
+          src_region_codes          = [] # TODO
+          src_threat_intelligences  = [] # TODO
+          dest_ip_ranges            = rule.dest_ranges
+          dest_address_groups       = coalesce(rule.dest_address_groups, rule.address_groups, [])
+          dest_fqdns                = [] # TODO
+          dest_region_codes         = [] # TODO
+          dest_threat_intelligences = [] # TODO
+          range_types               = toset(coalesce(rule.range_types, rule.range_type != null ? [rule.range_type] : []))
+          protocols                 = coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"])
+          ports                     = coalesce(rule.ports, rule.port != null ? [rule.port] : [])
         })
       ]
     })
   ]
 }
 
-# Get a list of unique range types in all rules, and use data source to lookup current IP address blocks
+# Get a list of unique range types in all rules
 locals {
   firewall_rules = flatten([for i, v in local._firewall_policies : [for rule in v.rules : rule]])
   range_types    = toset(flatten([for i, v in local.firewall_rules : [for rt in v.range_types : lower(rt)]]))
 }
+# Use data source to lookup current IP address blocks
 data "google_netblock_ip_ranges" "default" {
   for_each   = local.range_types
   range_type = each.value
@@ -61,8 +67,19 @@ locals {
             flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
             [],
           )) : null
+          dest_ip_ranges = rule.direction == "EGRESS" ? toset(coalesce(
+            rule.dest_ranges,
+            rule.ranges,
+            flatten([for rt in rule.range_types : try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)]),
+            [],
+          )) : null
           src_address_groups = toset(flatten(
             [for address_group in rule.src_address_groups :
+              try(google_network_security_address_group.default["${v.project_id}/${address_group}"].id, null)
+            ]
+          ))
+          dest_address_groups = toset(flatten(
+            [for address_group in rule.dest_address_groups :
               try(google_network_security_address_group.default["${v.project_id}/${address_group}"].id, null)
             ]
           ))
