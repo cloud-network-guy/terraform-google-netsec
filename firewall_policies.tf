@@ -40,7 +40,7 @@ locals {
 
 # Get a list of unique range types in all rules
 locals {
-  firewall_rules = flatten([for i, v in local._firewall_policies : [for rule in v.rules : rule]])
+  firewall_rules = flatten([for i, v in local._firewall_policies : [for rule in v.rules : rule if rule.create == true]])
   range_types    = toset(flatten([for i, v in local.firewall_rules : [for rt in v.range_types : lower(rt)]]))
 }
 # Use data source to lookup current IP address blocks
