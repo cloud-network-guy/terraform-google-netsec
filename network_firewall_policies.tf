@@ -54,14 +54,15 @@ locals {
   ])
   network_firewall_policy_rules = [for i, v in local._network_firewall_policy_rules :
     merge(v, {
-      index_key = v.is_global ? "${v.project_id}/${v.firewall_policy}/${v.priority}" : "${v.project_id}/${v.firewall_policy}/${v.name}"
+      #index_key = v.is_global ? "${v.project_id}/${v.firewall_policy}/${v.priority}" : "${v.project_id}/${v.firewall_policy}/${v.name}"
+      index_key = "${v.project_id}/${v.firewall_policy}/${v.priority}"
     })
   ]
 }
 
 # Global Network Firewall Policy Rules
 resource "google_compute_network_firewall_policy_rule" "default" {
-  for_each                = { for i, v in local.network_firewall_policy_rules : v.index_key => v if v.is_global }
+  for_each                = { for i, v in local.network_firewall_policy_rules : v.index_key => v }
   project                 = each.value.project_id
   firewall_policy         = each.value.firewall_policy
   rule_name               = each.value.rule_name
@@ -93,6 +94,8 @@ resource "google_compute_network_firewall_policy_rule" "default" {
   depends_on = [google_network_security_address_group.default]
 }
 
+/*
+
 # Regional Network Firewall Policy Rules
 resource "google_compute_region_network_firewall_policy_rule" "default" {
   for_each                = { for i, v in local.network_firewall_policy_rules : v.index_key => v if !v.is_global }
@@ -122,6 +125,8 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
   region     = each.value.region
   depends_on = [google_network_security_address_group.default]
 }
+
+*/
 
 # Associations
 locals {
