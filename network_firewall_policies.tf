@@ -54,7 +54,7 @@ locals {
   ])
   network_firewall_policy_rules = [for i, v in local._network_firewall_policy_rules :
     merge(v, {
-      index_key = v.is_global ? "${v.project_id}/${v.firewall_policy}/${v.priority}" : null
+      index_key = v.is_global ? "${v.project_id}/${v.firewall_policy}/${v.priority}" : "${v.project_id}/${v.firewall_policy}/${v.name}"
     })
   ]
 }
