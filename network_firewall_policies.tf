@@ -57,7 +57,7 @@ locals {
       #index_key = v.is_global ? "${v.project_id}/${v.firewall_policy}/${v.priority}" : "${v.project_id}/${v.firewall_policy}/${v.name}"
       index_key = "${v.project_id}/${v.firewall_policy}/${v.priority}"
     })
-  ]
+  ] if v.create == true
 }
 
 # Global Network Firewall Policy Rules
